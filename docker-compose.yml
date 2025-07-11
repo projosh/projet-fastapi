@@ -1,0 +1,58 @@
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:3.1.0
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
+    ports:
+      - 9200:9200
+    networks:
+      - log_network
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.1.0
+    ports:
+      - "5601:5601"
+    expose:
+      - "5601"
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+    depends_on:
+      - opensearch
+    networks:
+      - log_network
+
+  backend:
+    build: ./backend
+    container_name: log-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - opensearch
+    environment:
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=admin
+    networks:
+      - log_network
+
+  frontend:
+    build: .
+    container_name: log-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - log_network
+
+volumes:
+  opensearch_data:
+
+networks:
+  log_network:
+    driver: bridge
