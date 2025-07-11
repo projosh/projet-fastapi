@@ -1,58 +1,52 @@
-
 services:
   opensearch:
-    image: opensearchproject/opensearch:3.1.0
+    image: opensearchproject/opensearch:2.11.1
+    container_name: opensearch
     environment:
       - discovery.type=single-node
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
+      - plugins.security.disabled=true
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     ports:
-      - 9200:9200
+      - "9200:9200"
     networks:
-      - log_network
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
+      - lognet
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:3.1.0
-    ports:
-      - "5601:5601"
-    expose:
-      - "5601"
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: opensearch-dashboards
     environment:
       - OPENSEARCH_HOSTS=http://opensearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - lognet
     depends_on:
       - opensearch
-    networks:
-      - log_network
 
-  backend:
-    build: ./backend
-    container_name: log-backend
+  log-backend:
+    build:
+      context: ./backend
     ports:
       - "8000:8000"
+    networks:
+      - lognet
     depends_on:
       - opensearch
-    environment:
-      - OPENSEARCH_HOST=opensearch
-      - OPENSEARCH_PORT=9200
-      - OPENSEARCH_USERNAME=admin
-      - OPENSEARCH_PASSWORD=admin
-    networks:
-      - log_network
 
-  frontend:
-    build: .
-    container_name: log-frontend
+  log-frontend:
+    build:
+      context: ./frontend
     ports:
       - "3000:3000"
-    depends_on:
-      - backend
     networks:
-      - log_network
-
-volumes:
-  opensearch_data:
+      - lognet
+    depends_on:
+      - log-backend
 
 networks:
-  log_network:
-    driver: bridge
+  lognet:
