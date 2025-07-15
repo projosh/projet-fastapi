@@ -4,6 +4,10 @@ from routes import log_routes
 
 app = FastAPI()
 
+from fastapi import FastAPI
+
+app = FastAPI()
+
 
 # CORS configuration
 app.add_middleware(
