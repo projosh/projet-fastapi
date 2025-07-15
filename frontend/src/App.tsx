@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LogForm } from './components/LogForm';
 import { LogFilters } from './components/LogFilters';
 import { LogList } from './components/LogList';
